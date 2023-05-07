@@ -28,6 +28,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
+			<version>3.6.2</version>
 		</dependency>
 
 		<dependency>
@@ -45,8 +46,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.26</version>
-			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -59,7 +59,7 @@
 		<profile>
 			<id>test</id>
 			<properties>
-				<liquibase.config>src/main/resources/db/liquibase_test.properties</liquibase.config>
+				<liquibase.config>src/test/resources/liquibase_test.properties</liquibase.config>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
@@ -68,26 +68,43 @@
 		<profile>
 			<id>production</id>
 			<properties>
-				<liquibase.config>src/main/resources/db/application.properties</liquibase.config>
+				<liquibase.config>src/main/resources/liquibase.properties</liquibase.config>
 			</properties>
 		</profile>
 	</profiles>
+
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M9</version>
+				<configuration>
+					<skipTests>false</skipTests>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.1.2</version>
+				<version>3.2.1</version>
 				<dependencies>
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>9.3</version>
+						<version>10.7.0</version>
 					</dependency>
 				</dependencies>
 				<executions>
@@ -96,7 +113,6 @@
 						<phase>validate</phase>
 						<configuration>
 							<configLocation>checkstyle.xml</configLocation>
-							<encoding>UTF-8</encoding>
 							<consoleOutput>true</consoleOutput>
 							<failsOnError>true</failsOnError>
 							<includeTestSourceDirectory>true</includeTestSourceDirectory>
@@ -108,12 +124,21 @@
 				</executions>
 			</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>3.3.1</version>
+				<groupId>org.liquibase</groupId>
+				<artifactId>liquibase-maven-plugin</artifactId>
+				<version>4.19.0</version>
 				<configuration>
-					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<propertyFile>${liquibase.config}</propertyFile>
 				</configuration>
+				<executions>
+					<execution>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>clearCheckSums</goal>
+							<goal>update</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
